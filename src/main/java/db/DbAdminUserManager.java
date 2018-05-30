@@ -1,5 +1,6 @@
 package db;
-
+import model.AdminUserBean.AdminUserBean;
+import model.AdminUserInfoBean.AdminUserInfoBean;
 import model.UserBean;
 import model.UserInfoBean;
 
@@ -7,21 +8,21 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DbManager {
-    private static DbManager dbManager;
+public class DbAdminUserManager {
+    private static DbAdminUserManager dbAdminUserManager;
 
     private Connection conn = null;
     //siteware 是数据库名，根据需要修改
     private String url = "jdbc:mysql://localhost:3306/siteware?useUnicode=true&characterEncoding=utf-8";
-    public static DbManager getInstance(){
-        if(dbManager==null){
-            synchronized (DbManager.class){
-                if(dbManager==null){
-                    dbManager=new DbManager();
+    public static DbAdminUserManager getInstance(){
+        if(dbAdminUserManager==null){
+            synchronized (DbAdminUserManager.class){
+                if(dbAdminUserManager==null){
+                    dbAdminUserManager=new DbAdminUserManager();
                 }
             }
         }
-        return dbManager;
+        return dbAdminUserManager;
     }
 
     public void init(){
@@ -40,7 +41,7 @@ public class DbManager {
     public void createTable(){
         PreparedStatement pstmt;
 
-        String sql = "create table IF NOT EXISTS stu(id integer primary key not null auto_increment,name varchar(20),pwd varchar(20),unitName varchar(20),unitId varchar(20)) ENGINE=InnoDB DEFAULT CHARSET=utf8";
+        String sql = "create table IF NOT EXISTS adminUser(id integer primary key not null auto_increment,name varchar(20),password varchar(20),hashedPassword varchar(100)) ENGINE=InnoDB DEFAULT CHARSET=utf8";
         try {
             pstmt=conn.prepareStatement(sql);
             pstmt.execute();
@@ -51,16 +52,15 @@ public class DbManager {
     }
 
     //增加
-    public void insert(String name,String pwd,String unitName,String unitId){
-        String sql = "insert into stu(name,pwd,unitName,unitId) values(?,?,?,?)";
+    public void insert(String name,String password,String hashedPassword){
+        String sql = "insert into adminUser(name,password,hashedPassword) values(?,?,?)";
         PreparedStatement pstmt;
         try {
             pstmt=conn.prepareStatement(sql);
             //1,2对应sql语句里面的问号顺序
             pstmt.setString(1,name);
-            pstmt.setString(2,pwd);
-            pstmt.setString(3,unitName);
-            pstmt.setString(4,unitId);
+            pstmt.setString(2,password);
+            pstmt.setString(3,hashedPassword);
 
             pstmt.execute();
             pstmt.close();
@@ -71,16 +71,15 @@ public class DbManager {
     }
 
     //修改
-    public void update(String name,String pwd,String unitName,String unitId,int id){
-        String sql = "UPDATE stu set name=?,pwd=?,unitName=?,unitId=? WHERE  id=?";
+    public void update(String name,String password,String hashedPassword,int id){
+        String sql = "UPDATE adminUser set name=?,password=?,hashedPassword=? WHERE  id=?";
         PreparedStatement pstmt;
         try {
             pstmt=conn.prepareStatement(sql);
             pstmt.setString(1,name);
-            pstmt.setString(2,pwd);
-            pstmt.setString(3,unitName);
-            pstmt.setString(4,unitId);
-            pstmt.setInt(5,id);
+            pstmt.setString(2,password);
+            pstmt.setString(3,hashedPassword);
+            pstmt.setInt(4,id);
             pstmt.execute();
             pstmt.close();
         } catch (SQLException e) {
@@ -89,7 +88,7 @@ public class DbManager {
     }
     //删除
     public void delete(String name){
-        String sql = "DELETE FROM stu where name=?";
+        String sql = "DELETE FROM adminUser where name=?";
         PreparedStatement pstmt;
         try {
             pstmt=conn.prepareStatement(sql);
@@ -101,9 +100,9 @@ public class DbManager {
         }
     }
     //查询
-    public List<UserInfoBean> select(String name){
-        List<UserInfoBean> userInfoBeans=new ArrayList<UserInfoBean>();
-        String sql = "SELECT * FROM stu WHERE name=?";    //要执行的SQL
+    public List<AdminUserInfoBean> select(String name){
+        List<AdminUserInfoBean> adminUserBeans = new ArrayList<AdminUserInfoBean>();
+        String sql = "SELECT * FROM adminUser WHERE name=?";    //要执行的SQL
         PreparedStatement pstmt;
         ResultSet rs=null;
         try {
@@ -111,18 +110,18 @@ public class DbManager {
             pstmt.setString(1,name);
             rs = pstmt.executeQuery();//创建数据对象
             while (rs.next()){
-                UserInfoBean userInfoBean=new UserInfoBean();
-                userInfoBean.setName(rs.getString(2));
-                userInfoBean.setPwd(rs.getString(3));
-                userInfoBean.setUnitName(rs.getString(4));
-                userInfoBean.setUnitId(rs.getString(5));
-                userInfoBeans.add(userInfoBean);
+                AdminUserInfoBean adminUserInfoBean = new AdminUserInfoBean();
+                adminUserInfoBean.setUsername(rs.getString(2));
+                adminUserInfoBean.setPassword(rs.getString(3));
+                adminUserInfoBean.setHashedPassword(rs.getString(4));
+
+                adminUserBeans.add(adminUserInfoBean);
             }
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return userInfoBeans;
+        return adminUserBeans;
     }
 
 
@@ -134,4 +133,5 @@ public class DbManager {
             e.printStackTrace();
         }
     }
+
 }

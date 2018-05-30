@@ -6,11 +6,18 @@ public class UserInfoBean
 {
     private String name;
 
-    private int pwd;
+    private String pwd;
 
     private String unitName;
 
     private String unitId;
+    private String role;
+    public void setRole(String role){
+        this.role = role;
+    }
+    public String getRole(){
+        return this.role;
+    }
 
     public void setName(String name){
         this.name = name;
@@ -18,10 +25,10 @@ public class UserInfoBean
     public String getName(){
         return this.name;
     }
-    public void setPwd(int pwd){
+    public void setPwd(String pwd){
         this.pwd = pwd;
     }
-    public int getPwd(){
+    public String getPwd(){
         return this.pwd;
     }
     public void setUnitName(String unitName){

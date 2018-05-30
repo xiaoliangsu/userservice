@@ -2,10 +2,12 @@ package controller;
 import com.alibaba.fastjson.JSON;
 import com.sun.org.apache.regexp.internal.RE;
 import config.GlobalCorsConfig;
+import db.DbAdminUserManager;
 import db.DbManager;
 import db.DbDeviceManage;
 import interfaces.ResultInfoInterface;
 import model.*;
+import model.AdminUserInfoBean.AdminUserInfoBean;
 import model.AssetHardware.AssetHardwareBean;
 import model.AssetHardware.Properties;
 import model.ResSpecBean.ResSpecBean;
@@ -156,29 +158,65 @@ public class UserController {
 //			System.out.println(userInfoBean.getName()+userInfoBean.getPwd());
 //
 //		}
-		DbManager.getInstance().init();
-//		DbManager.getInstance().insert("loutong",123,"user Agent1","12345");
+		System.out.println(userInfoBean.getName() );
+		String temp = "admin";
+		if(userInfoBean.getName().equals(temp)){
+			loginStatusBean.setStatus(3);
+			loginStatusBean.setMsg("登录成功！");
+			UserData userData = new UserData();
+			userData.setName(userInfoBean.getName());
+			loginStatusBean.setUserData(userData);
 
-		List<UserInfoBean> userInfoBeans=DbManager.getInstance().select(userInfoBean.getName());
-		//如果用户名不存在
-		if(userInfoBeans.size() == 0 ){
-			loginStatusBean.setStatus(0);
-			loginStatusBean.setMsg("用户不存在");
-		}else{
-			if(userInfoBeans.get(0).getPwd() ==userInfoBean.getPwd()){
-				loginStatusBean.setStatus(1);
-				loginStatusBean.setMsg("登录成功！");
-				UserData userData = new UserData();
-				userData.setTenantToken(userInfoBeans.get(0).getUnitId());
-				userData.setName(userInfoBeans.get(0).getName());
-				loginStatusBean.setUserData(userData);
-			}else {
-				loginStatusBean.setStatus(2);
-				loginStatusBean.setMsg("密码不正确，请重新填写！");
+		}else if(userInfoBean.getRole().equals("tenant")){
+			DbManager.getInstance().init();
+			List<UserInfoBean> userInfoBeans=DbManager.getInstance().select(userInfoBean.getName());
+			//如果用户名不存在
+			if(userInfoBeans.size() == 0 ){
+				loginStatusBean.setStatus(0);
+				loginStatusBean.setMsg("用户不存在");
+			}else{
+				if(userInfoBeans.get(0).getPwd().equals(userInfoBean.getPwd())){
+					loginStatusBean.setStatus(1);
+					loginStatusBean.setMsg("登录成功！");
+					UserData userData = new UserData();
+					userData.setTenantToken(userInfoBeans.get(0).getUnitId());
+					userData.setName(userInfoBeans.get(0).getName());
+					loginStatusBean.setUserData(userData);
+				}else {
+					loginStatusBean.setStatus(2);
+					loginStatusBean.setMsg("密码不正确，请重新填写！");
 
+				}
 			}
+			DbManager.getInstance().close();
+
+		}else if(userInfoBean.getRole().equals("adminUser")){
+			DbAdminUserManager.getInstance().init();
+			List<AdminUserInfoBean> adminUserInfoBeans=DbAdminUserManager.getInstance().select(userInfoBean.getName());
+
+//			List<UserInfoBean> userInfoBeans=DbManager.getInstance().select(userInfoBean.getName());
+			//如果用户名不存在
+			if(adminUserInfoBeans.size() == 0 ){
+				loginStatusBean.setStatus(0);
+				loginStatusBean.setMsg("用户不存在");
+			}else{
+				if(adminUserInfoBeans.get(0).getPassword().equals(userInfoBean.getPwd())){
+					loginStatusBean.setStatus(4);
+					loginStatusBean.setMsg("登录成功！");
+					UserData userData = new UserData();
+					userData.setTenantToken(adminUserInfoBeans.get(0).getHashedPassword());
+					userData.setName(adminUserInfoBeans.get(0).getUsername());
+					loginStatusBean.setUserData(userData);
+				}else {
+					loginStatusBean.setStatus(2);
+					loginStatusBean.setMsg("密码不正确，请重新填写！!");
+
+				}
+			}
+			DbAdminUserManager.getInstance().close();
+
 		}
-		DbManager.getInstance().close();
+
 		//对象转成字符串
 		//JSON.toJSONString(userBean);
 		return JSON.toJSONString(loginStatusBean);
