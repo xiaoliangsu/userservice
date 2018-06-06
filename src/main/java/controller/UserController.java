@@ -12,6 +12,8 @@ import model.AssetHardware.AssetHardwareBean;
 import model.AssetHardware.Properties;
 import model.ResSpecBean.ResSpecBean;
 import model.SpecBean.SpecBean;
+import model.SpecCommondBean.Parameters;
+import model.SpecCommondBean.SpecCommondBean;
 import network.NetworkUtils;
 import org.apache.catalina.User;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,6 +44,8 @@ import java.util.List;
 public class UserController {
     private String name;
     private int pwd;
+    private String specCommondResult1 = null;
+	private String specCommondResult2 = null;
     
     @GetMapping(value="/index")
 	public String index(){
@@ -150,6 +154,10 @@ public class UserController {
 		return result;
 	}
 
+
+
+
+	//登录
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public String login(@RequestBody UserInfoBean userInfoBean){
     	//登录状态返回值
@@ -299,6 +307,38 @@ public class UserController {
 														DbDeviceManage.getInstance().init();
 														DbDeviceManage.getInstance().insert(userInfoBean.getName(),"",resSpecBean.getToken(),sitewhereToken,resSpecBean.getName());
 														DbDeviceManage.getInstance().close();
+														//创建spec 指令
+														String url = "http://localhost:8080/sitewhere/api/specifications/"+resSpecBean.getToken()+"/commands";
+														SpecCommondBean specCommondBean  = new SpecCommondBean();
+														specCommondBean.setName("stopDev");
+														specCommondBean.setNamespace("www.bupt.edu.cn");
+														specCommondBean.setDescription("停用设备");
+														Parameters parameters = new Parameters();
+														List<Parameters>  parametersList = new ArrayList<Parameters>();
+														parameters.setName("p1");
+														parameters.setType("String");
+														parameters.setRequired(true);
+														parametersList.add(parameters);
+														specCommondBean.setParameters(parametersList);
+														specCommondBean.setMetadata(new model.SpecCommondBean.Metadata());
+														String specCommond = JSON.toJSONString(specCommondBean);
+														specCommondResult1 = NetworkUtils.doPostAsync(url, specCommond,sitewhereToken);
+
+														SpecCommondBean specCommondBean2  = new SpecCommondBean();
+														specCommondBean2.setName("beginDev");
+														specCommondBean2.setNamespace("www.bupt.edu.cn");
+														specCommondBean2.setDescription("启用设备");
+														Parameters parameters2 = new Parameters();
+														List<Parameters>  parametersList2 = new ArrayList<Parameters>();
+														parameters2.setName("p1");
+														parameters2.setType("String");
+														parameters2.setRequired(true);
+														parametersList2.add(parameters2);
+														specCommondBean2.setParameters(parametersList2);
+														specCommondBean2.setMetadata(new model.SpecCommondBean.Metadata());
+														String specCommond2 = JSON.toJSONString(specCommondBean2);
+														specCommondResult2 = NetworkUtils.doPostAsync(url, specCommond2,sitewhereToken);
+
 
 													}
 												});
@@ -334,6 +374,7 @@ public class UserController {
 
 
 
+
 							}
 						});
 					}
@@ -350,6 +391,15 @@ public class UserController {
 		//JSON.toJSONString(userBean);
 		return JSON.toJSONString(loginStatusBean);
 
+	}
+
+	//获取用户信息
+	@RequestMapping(value = "/getUserInfo", method = RequestMethod.GET)
+	public String getUserInfo(@RequestParam(value="name",required = true) String name){
+		DbManager.getInstance().init();
+		List<UserInfoBean> userInfoBeans =DbManager.getInstance().select(name);
+		UserInfoBean userInfoBean = userInfoBeans.get(0);
+		return JSON.toJSONString(userInfoBean);
 	}
 
 

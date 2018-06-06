@@ -52,9 +52,9 @@ public class AdminUserController {
     private String userTenantsResult = null;
 
     @RequestMapping(value = "/getAdminUsers", method = RequestMethod.GET)
-    public String getAdminUsers(@RequestParam(value="sitewhereToken",required = true) String sitewhereToken){
+    public String getAdminUsers(@RequestParam(value="sitewhereToken",required = false) String sitewhereToken){
         String url = "http://localhost:8080/sitewhere/api/users?includeDeleted=true";
-        adminUsersResult = NetworkUtils.doGetAsync(url, sitewhereToken);
+        adminUsersResult = NetworkUtils.doGetAsync(url, "");
         return adminUsersResult;
     }
     @RequestMapping(value = "/addAdminUsers",method = RequestMethod.POST)
